@@ -35,6 +35,7 @@ pg = st.navigation(
         st.Page("./pages/homepage.py"),
         st.Page("./pages/config.py"),
         st.Page("./pages/analysis.py"),
+        st.Page("./pages/regression.py")
     ]
 )  # , st.Page("./pages/jupyter.py")])
 pg.run()

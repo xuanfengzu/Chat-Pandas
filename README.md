@@ -4,6 +4,7 @@ Chat-Pandas is a tool that allows you to interact with your data in a natural la
 Also, Chat-Pandas has a frontend by streamlit that allows you to interact with your data in a more intuitive way.
 
 ### diary
+- 2024-12-15 The second version of Chat-Pandas has been released. In this version, we have implemented the ability to visualize the data in a simple form to implement EDA, and added a page for autogluon's regression.
 - 2024-12-9 The first version of Chat-Pandas has been released. In this version, we have implemented the basic functionality of Chat-Pandas, including the ability to query data from a single dataframe. For the frontend, I have implemented a simple interface using __streamlit__. This version only allows you to do the change of the dataframe itself. In the later future, I would like to add the support of data-fitting with sklearn and data visualization with seaborn.
 
 ### login

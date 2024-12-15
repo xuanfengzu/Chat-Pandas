@@ -1,10 +1,12 @@
 import sys
 import os
 from copy import deepcopy
-from io import StringIO
+from io import StringIO, BytesIO
 
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
+import plotly.express as px
 
 __chat_pandas_path = (
     "/".join(
@@ -50,6 +52,8 @@ else:
 
 if st.session_state.get("logged_in", False):
     st.title("分析界面")
+    st.session_state["__run_code"] = False
+    st.session_state["generated_image"] = False
 
     st.markdown("### 上传 CSV 文件")
     # 处理文件上传
@@ -134,9 +138,18 @@ if st.session_state.get("logged_in", False):
                     confirm_button = st.button("确认", key="confirm_adjust")
                     # if st.button("确定", key="confirm_button"):
                 if st.button("运行代码", key="run_code_button"):
+                    st.session_state["__run_code"] = True
                     try:
                         df = deepcopy(st.session_state["df"][-1])
+                        # 记录当前是否有图像生成
+                        initial_plots = len(plt.get_fignums())  # 获取当前图像数量
                         exec(st.session_state["final_code"])
+                        # 检查是否生成了新图像
+                        new_plots = len(plt.get_fignums())
+                        
+                        # 如果图像数量增加，说明生成了新图像
+                        if new_plots > initial_plots:
+                            st.session_state["generated_image"] = True
                         st.session_state["cp"].history.add_history(st.session_state["final_code"])
                         st.session_state["df"].append(deepcopy(df))
                         if len(st.session_state["df"]) > 5:
@@ -150,6 +163,51 @@ if st.session_state.get("logged_in", False):
                     st.session_state["adjust"] = False
                     print(st.session_state["final_code"])
                     st.info("代码已确认，请点击运行以执行代码。")
+
+       
+
+        if "user_query" in st.session_state and "final_code" in st.session_state and st.session_state["__run_code"] and st.session_state["generated_image"]:
+            # 数据可视化与图片下载
+            st.markdown("### 数据可视化与图片下载")
+            img_buffer = BytesIO()  # 创建一个 BytesIO 缓冲区
+            try:
+                # 设置图像大小
+                plt.figure(figsize=(6, 4))  # 图像大小为 6x4 英寸
+                
+                # 执行 OpenAI 生成的代码，保存结果
+                exec_globals = {"df": st.session_state["df"][-1], "plt": plt, "px": px}
+                exec(st.session_state["final_code"], exec_globals)
+                
+                # 检查执行后是否有 Matplotlib 图表对象
+                if "plt" in exec_globals:
+                    fig = plt.gcf()  
+                    fig.savefig(img_buffer, format="png")  
+                    img_buffer.seek(0) 
+
+                    # 显示图像
+                    st.image(img_buffer, caption="生成的图表", width=800)
+                    
+                    # 下载按钮
+                    st.download_button(
+                        label="下载图片 (PNG)",
+                        data=img_buffer.getvalue(),
+                        file_name=f"{st.session_state['username']}_visualization.png",
+                        mime="image/png"
+                    )
+                    st.success("图表已生成并可下载！")
+
+                else:
+                    st.warning("未检测到有效的图表，请检查生成的代码。")
+
+            except Exception as e:
+                st.error(f"执行代码或生成图表失败：{e}")
+            finally:
+                img_buffer.close()  
+                st.session_state["__run_code"] = False
+                st.session_state["generated_image"] = False
+
+
+
 
         # 显示表格
         st.markdown("### 数据表预览")
@@ -169,6 +227,7 @@ if st.session_state.get("logged_in", False):
             file_name=f"{st.session_state['username']}_data.csv",
             mime="text/csv"
         )
+        
         
 else:
     st.warning("请先在左侧栏登录以访问此页面！")

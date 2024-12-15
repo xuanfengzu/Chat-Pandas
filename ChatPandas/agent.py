@@ -46,7 +46,14 @@ class Agent:
         }),
             json.dumps({
                 "code": "```python\ndf.iloc[:,1] = df.iloc[:,1].mean()```"
+            }),
+            json.dumps({
+                "code": "```\ndf.iloc[:,1] = df.iloc[:,1].mean()\nplt.figure(figsize=(6, 4))\nplt.boxplot(df.iloc[:, 2], vert=True, patch_artist=True)\nplt.show()```"
+            }),
+            json.dumps({
+                "code": "```\nplt.figure(figsize=(6, 4))\nplt.scatter(df.iloc[:, 2], df.iloc[:, 3])\nplt.show()```"
             })
+
         ]
         import random
         return random.choice(results)
